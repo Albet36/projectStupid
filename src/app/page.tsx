@@ -5,6 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { useState, useEffect } from 'react';
 import { listNewsApi } from './api/api';
 import type { DatePickerProps } from 'antd';
+import * as XLSX from 'xlsx';
 interface DataType {
   key: string;
   name: string;
@@ -20,6 +21,40 @@ export default function Home() {
   const [listNews, setListNews] = useState<any>();
   const [filteredNews, setFilteredNews] = useState<any>([]);
 
+
+  const exportToExcel = () => {
+    // Chuẩn bị dữ liệu để xuất Excel
+    const dataToExport = filteredNews?.articles;
+  
+    // Tạo một workbook mới
+    const workbook = XLSX.utils.book_new();
+  
+    // Tạo một worksheet từ dữ liệu
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  
+    // Thêm worksheet vào workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'News Data');
+  
+    // Xuất tệp Excel
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  
+    // Tạo và tải xuống tệp Excel
+    const excelData = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const excelFileName = 'filtered_data.xlsx';
+  
+    // Tạo một URL tạm thời để tải xuống tệp Excel
+    const excelURL = URL.createObjectURL(excelData);
+  
+    // Tạo một phần tử a ẩn và thực hiện nhấp chuột ảo để tải xuống tệp Excel
+    const downloadLink = document.createElement('a');
+    downloadLink.href = excelURL;
+    downloadLink.download = excelFileName;
+    downloadLink.dispatchEvent(new MouseEvent('click'));
+  
+    // Giải phóng URL tạm thời
+    URL.revokeObjectURL(excelURL);
+  };
+  
   const columns: ColumnsType<DataType> = [
     {
       title: 'Name',
@@ -92,6 +127,7 @@ export default function Home() {
   return (
     <>
       <div className='flex gap-2'>
+      <button onClick={exportToExcel}>Xuất Excel</button>
         <Select
           mode='multiple'
           allowClear
